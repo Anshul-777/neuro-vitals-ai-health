@@ -6,6 +6,40 @@
 
 @layer base {
   :root {
+    --background: 210 20% 98%;
+    --foreground: 222 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 25% 12%;
+    --primary: 200 80% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 15% 93%;
+    --secondary-foreground: 222 20% 20%;
+    --muted: 210 12% 94%;
+    --muted-foreground: 215 12% 45%;
+    --accent: 200 30% 92%;
+    --accent-foreground: 222 20% 18%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 15% 88%;
+    --input: 214 15% 88%;
+    --ring: 200 80% 44%;
+    --radius: 0.75rem;
+    --success: 160 70% 38%;
+    --warning: 38 92% 50%;
+    --info: 210 80% 50%;
+    --sidebar-background: 210 18% 96%;
+    --sidebar-foreground: 222 20% 18%;
+    --sidebar-primary: 200 80% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 92%;
+    --sidebar-accent-foreground: 222 20% 18%;
+    --sidebar-border: 214 15% 90%;
+    --sidebar-ring: 200 80% 44%;
+  }
+
+  .dark {
     --background: 222 30% 6%;
     --foreground: 210 15% 90%;
     --card: 222 25% 10%;
@@ -57,8 +91,8 @@
 
   .neuro-grid {
     background-image:
-      linear-gradient(hsl(185 75% 48% / 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(185 75% 48% / 0.08) 1px, transparent 1px);
+      linear-gradient(hsl(200 80% 44% / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(200 80% 44% / 0.06) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
