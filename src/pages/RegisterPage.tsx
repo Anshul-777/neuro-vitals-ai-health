@@ -20,6 +20,7 @@ import {
   EyeOff,
   Calendar,
 } from "lucide-react";
+import registerBg from "@/assets/register-bg.jpg";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -86,14 +87,12 @@ const RegisterPage = () => {
       return;
     }
 
-    // Check if user already exists
     const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
     if (users[email]) {
       setFormError("An account with this email already exists. Please login instead.");
       return;
     }
 
-    // Store user
     users[email] = {
       fullName,
       email,
@@ -128,15 +127,18 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden py-12">
-      <div className="absolute inset-0 neuro-grid opacity-15" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden py-12">
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${registerBg})` }} />
+      <div className="absolute inset-0 bg-background/75 backdrop-blur-sm" />
+      <div className="absolute inset-0 neuro-grid opacity-10" />
+
       <motion.div
         className="absolute bottom-1/3 right-1/3 w-96 h-96 rounded-full bg-primary/5 blur-[120px]"
         animate={{ scale: [1, 1.3, 1] }}
         transition={{ duration: 7, repeat: Infinity }}
       />
 
-      <div className="relative z-10 w-full max-w-lg mx-auto px-6">
+      <div className="relative z-10 w-full max-w-xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,21 +152,21 @@ const RegisterPage = () => {
             Back to home
           </Link>
 
-          <div className="p-8 rounded-2xl border border-border bg-card shadow-sm">
+          <div className="p-10 rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg">
             <div className="text-center mb-8">
-              <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-                <UserPlus className="h-7 w-7 text-primary" />
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+                <UserPlus className="h-8 w-8 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-3xl font-bold text-foreground">
                 Create Account
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-2">
                 Register for your Neuro-VX health profile
               </p>
             </div>
 
             {/* Step indicator */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-8">
               <div className="flex items-center gap-1.5 flex-1">
                 <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</div>
                 <span className="text-xs text-foreground font-medium">Details</span>
@@ -195,7 +197,7 @@ const RegisterPage = () => {
                       <Input
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        placeholder="John Doe"
+                        placeholder="Enter your full name"
                         className="h-12 pl-10 bg-background"
                         required
                       />
@@ -212,7 +214,7 @@ const RegisterPage = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
+                        placeholder="Enter your email address"
                         className="h-12 pl-10 bg-background"
                         required
                       />
@@ -230,7 +232,7 @@ const RegisterPage = () => {
                           type="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          placeholder="+1 (555) 000"
+                          placeholder="Phone number"
                           className="h-12 pl-10 bg-background"
                         />
                       </div>
@@ -363,12 +365,12 @@ const RegisterPage = () => {
                       <button
                         onClick={handleFingerprintRegister}
                         disabled={status === "authenticating"}
-                        className="w-full p-6 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all duration-300 flex flex-col items-center gap-3 disabled:opacity-50"
+                        className="w-full p-8 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all duration-300 flex flex-col items-center gap-3 disabled:opacity-50"
                       >
                         {status === "authenticating" ? (
-                          <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                          <Loader2 className="h-12 w-12 text-primary animate-spin" />
                         ) : (
-                          <Fingerprint className="h-10 w-10 text-primary" />
+                          <Fingerprint className="h-12 w-12 text-primary" />
                         )}
                         <span className="text-sm font-mono text-foreground tracking-wider">
                           {status === "authenticating" ? "ENROLLING..." : "TAP TO ENROLL FINGERPRINT"}
@@ -426,9 +428,9 @@ const RegisterPage = () => {
 
                   {/* Success */}
                   {status === "success" && (
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4 py-6">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/50 flex items-center justify-center">
-                        <CheckCircle2 className="h-8 w-8 text-primary" />
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4 py-8">
+                      <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary/50 flex items-center justify-center">
+                        <CheckCircle2 className="h-10 w-10 text-primary" />
                       </div>
                       <p className="font-mono text-sm text-foreground tracking-wider">REGISTRATION COMPLETE</p>
                       <p className="text-xs text-muted-foreground">Redirecting to login...</p>
@@ -459,8 +461,8 @@ const RegisterPage = () => {
               )}
             </AnimatePresence>
 
-            <div className="mt-6 text-center">
-              <p className="text-xs text-muted-foreground">
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary hover:underline font-medium">Login</Link>
               </p>
