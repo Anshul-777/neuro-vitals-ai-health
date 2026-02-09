@@ -17,6 +17,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import loginBg from "@/assets/login-bg.jpg";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -63,7 +64,6 @@ const LoginPage = () => {
       return;
     }
 
-    // Check if user exists in localStorage
     const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
     const user = users[email];
     if (!user) {
@@ -99,15 +99,18 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 neuro-grid opacity-15" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${loginBg})` }} />
+      <div className="absolute inset-0 bg-background/75 backdrop-blur-sm" />
+      <div className="absolute inset-0 neuro-grid opacity-10" />
+
       <motion.div
         className="absolute top-1/3 left-1/3 w-96 h-96 rounded-full bg-primary/5 blur-[120px]"
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 8, repeat: Infinity }}
       />
 
-      <div className="relative z-10 w-full max-w-md mx-auto px-6">
+      <div className="relative z-10 w-full max-w-xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -121,23 +124,30 @@ const LoginPage = () => {
             Back to home
           </Link>
 
-          <div className="p-8 rounded-2xl border border-border bg-card shadow-sm">
+          <div className="p-10 rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-lg">
             <div className="text-center mb-8">
-              <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-                <Shield className="h-7 w-7 text-primary" />
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+                <Shield className="h-8 w-8 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-3xl font-bold text-foreground">
                 Welcome Back
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-2">
                 Sign in to your Neuro-VX account
               </p>
             </div>
 
             {/* Step indicator */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className={`flex-1 h-1 rounded-full transition-colors ${step === "credentials" ? "bg-primary" : "bg-primary"}`} />
-              <div className={`flex-1 h-1 rounded-full transition-colors ${step === "biometric" ? "bg-primary" : "bg-border"}`} />
+            <div className="flex items-center gap-2 mb-8">
+              <div className="flex items-center gap-1.5 flex-1">
+                <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</div>
+                <span className="text-xs text-foreground font-medium">Credentials</span>
+              </div>
+              <div className="flex-1 h-px bg-border" />
+              <div className="flex items-center gap-1.5 flex-1 justify-end">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${step === "biometric" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>2</div>
+                <span className={`text-xs font-medium ${step === "biometric" ? "text-foreground" : "text-muted-foreground"}`}>Biometric</span>
+              </div>
             </div>
 
             <AnimatePresence mode="wait">
@@ -148,7 +158,7 @@ const LoginPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleCredentialSubmit}
-                  className="space-y-4"
+                  className="space-y-5"
                 >
                   <div>
                     <label className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-2 block">
@@ -160,7 +170,7 @@ const LoginPage = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
+                        placeholder="Enter your email"
                         className="h-12 pl-10 bg-background"
                         required
                       />
@@ -244,12 +254,12 @@ const LoginPage = () => {
                       <button
                         onClick={handleFingerprintAuth}
                         disabled={status === "authenticating"}
-                        className="w-full p-6 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all duration-300 flex flex-col items-center gap-3 disabled:opacity-50"
+                        className="w-full p-8 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all duration-300 flex flex-col items-center gap-3 disabled:opacity-50"
                       >
                         {status === "authenticating" ? (
-                          <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                          <Loader2 className="h-12 w-12 text-primary animate-spin" />
                         ) : (
-                          <Fingerprint className="h-10 w-10 text-primary" />
+                          <Fingerprint className="h-12 w-12 text-primary" />
                         )}
                         <span className="text-sm font-mono text-foreground tracking-wider">
                           {status === "authenticating" ? "SCANNING..." : "TAP TO VERIFY FINGERPRINT"}
@@ -313,9 +323,9 @@ const LoginPage = () => {
 
                   {/* Success */}
                   {status === "success" && (
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4 py-6">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/50 flex items-center justify-center">
-                        <CheckCircle2 className="h-8 w-8 text-primary" />
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4 py-8">
+                      <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary/50 flex items-center justify-center">
+                        <CheckCircle2 className="h-10 w-10 text-primary" />
                       </div>
                       <p className="font-mono text-sm text-foreground tracking-wider">IDENTITY VERIFIED</p>
                       <p className="text-xs text-muted-foreground">Redirecting to dashboard...</p>
@@ -346,8 +356,8 @@ const LoginPage = () => {
               )}
             </AnimatePresence>
 
-            <div className="mt-6 text-center">
-              <p className="text-xs text-muted-foreground">
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link to="/register" className="text-primary hover:underline font-medium">Register</Link>
               </p>
