@@ -53,19 +53,25 @@ const LoginPage = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setFormError("Please enter a valid email address.");
+    if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
+      setFormError("Email must be a valid @gmail.com address.");
       return;
     }
 
-    if (password.length < 6) {
-      setFormError("Password must be at least 6 characters.");
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!emailRegex.test(email.trim())) {
+      setFormError("Please enter a valid Gmail address.");
       return;
     }
 
+    if (password.length < 8) {
+      setFormError("Password must be at least 8 characters.");
+      return;
+    }
+
+    const userKey = email.trim().toLowerCase();
     const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
-    const user = users[email];
+    const user = users[userKey];
     if (!user) {
       setFormError("No account found with this email. Please register first.");
       return;
@@ -75,22 +81,47 @@ const LoginPage = () => {
       return;
     }
 
+    // Check that biometric was enrolled during registration
+    const bioMethods = JSON.parse(localStorage.getItem("nvx_bio_methods") || "{}");
+    const creds = JSON.parse(localStorage.getItem("nvx_credentials") || "{}");
+    const faceProfiles = JSON.parse(localStorage.getItem("nvx_face_profiles") || "{}");
+    if (!creds[userKey] && !faceProfiles[userKey]) {
+      setFormError("No biometric data found for this account. Please register again.");
+      return;
+    }
+
     setStep("biometric");
   };
 
+  const userKey = email.trim().toLowerCase();
+
   const handleFingerprintAuth = async () => {
-    const success = await authenticateFingerprint(email);
+    // Check if user registered with fingerprint
+    const creds = JSON.parse(localStorage.getItem("nvx_credentials") || "{}");
+    if (!creds[userKey]) {
+      setFormError("You registered with face scan, not fingerprint. Please use face verification.");
+      setStep("credentials");
+      return;
+    }
+    const success = await authenticateFingerprint(userKey);
     if (success) {
       setTimeout(() => navigate("/dashboard"), 1000);
     }
   };
 
   const handleFaceAuth = async () => {
+    // Check if user registered with face
+    const faceProfiles = JSON.parse(localStorage.getItem("nvx_face_profiles") || "{}");
+    if (!faceProfiles[userKey]) {
+      setFormError("You registered with fingerprint, not face scan. Please use fingerprint verification.");
+      setStep("credentials");
+      return;
+    }
     if (!videoRef.current) return;
     const started = await startFaceCapture(videoRef.current);
     if (started) {
       setFaceScanning(true);
-      const success = await completeFaceAuth(email, false);
+      const success = await completeFaceAuth(userKey, false);
       if (success) {
         setTimeout(() => navigate("/dashboard"), 1000);
       }
