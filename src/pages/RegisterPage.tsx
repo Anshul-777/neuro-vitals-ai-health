@@ -52,18 +52,51 @@ const RegisterPage = () => {
     detectMethod();
   }, [detectMethod]);
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setPhone(val);
+  };
+
   const handleInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
 
-    if (!fullName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !dob.trim() || !password.trim() || !confirmPassword.trim()) {
       setFormError("Please fill in all required fields.");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setFormError("Please enter a valid email address.");
+    if (fullName.trim().length < 2 || fullName.trim().length > 50) {
+      setFormError("Full name must be between 2 and 50 characters.");
+      return;
+    }
+
+    if (!email.trim().toLowerCase().endsWith("@gmail.com")) {
+      setFormError("Email must be a valid @gmail.com address.");
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!emailRegex.test(email.trim())) {
+      setFormError("Please enter a valid Gmail address.");
+      return;
+    }
+
+    if (phone.length !== 10) {
+      setFormError("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+    if (!dob) {
+      setFormError("Date of birth is required.");
+      return;
+    }
+
+    const dobDate = new Date(dob);
+    const today = new Date();
+    const age = today.getFullYear() - dobDate.getFullYear();
+    if (age < 13 || age > 120) {
+      setFormError("You must be at least 13 years old to register.");
       return;
     }
 
@@ -77,8 +110,18 @@ const RegisterPage = () => {
       return;
     }
 
+    if (!/[a-z]/.test(password)) {
+      setFormError("Password must contain at least one lowercase letter.");
+      return;
+    }
+
     if (!/[0-9]/.test(password)) {
       setFormError("Password must contain at least one number.");
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      setFormError("Password must contain at least one special character (!@#$%^&*).");
       return;
     }
 
@@ -88,14 +131,14 @@ const RegisterPage = () => {
     }
 
     const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
-    if (users[email]) {
+    if (users[email.trim().toLowerCase()]) {
       setFormError("An account with this email already exists. Please login instead.");
       return;
     }
 
-    users[email] = {
-      fullName,
-      email,
+    users[email.trim().toLowerCase()] = {
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
       phone,
       dob,
       password,
@@ -106,10 +149,16 @@ const RegisterPage = () => {
     setStep("biometric");
   };
 
+  const userKey = email.trim().toLowerCase();
+
   const handleFingerprintRegister = async () => {
-    const success = await registerFingerprint(email);
+    const success = await registerFingerprint(userKey);
     if (success) {
-      setTimeout(() => navigate("/login"), 1500);
+      // Store which biometric method was used
+      const bioMethods = JSON.parse(localStorage.getItem("nvx_bio_methods") || "{}");
+      bioMethods[userKey] = "fingerprint";
+      localStorage.setItem("nvx_bio_methods", JSON.stringify(bioMethods));
+      setTimeout(() => navigate("/dashboard"), 1500);
     }
   };
 
@@ -118,9 +167,13 @@ const RegisterPage = () => {
     const started = await startFaceCapture(videoRef.current);
     if (started) {
       setFaceScanning(true);
-      const success = await completeFaceAuth(email, true);
+      const success = await completeFaceAuth(userKey, true);
       if (success) {
-        setTimeout(() => navigate("/login"), 1500);
+        // Store which biometric method was used
+        const bioMethods = JSON.parse(localStorage.getItem("nvx_bio_methods") || "{}");
+        bioMethods[userKey] = "face";
+        localStorage.setItem("nvx_bio_methods", JSON.stringify(bioMethods));
+        setTimeout(() => navigate("/dashboard"), 1500);
       }
       setFaceScanning(false);
     }
@@ -223,23 +276,25 @@ const RegisterPage = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-2 block">
-                        Phone Number
+                     <label className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-2 block">
+                        Phone Number <span className="text-destructive">*</span>
                       </label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="tel"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="Phone number"
-                          className="h-12 pl-10 bg-background"
-                        />
+                      <Input
+                        type="tel"
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        placeholder="10-digit number"
+                        maxLength={10}
+                        className="h-12 pl-10 bg-background"
+                        required
+                      />
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-2 block">
-                        Date of Birth
+                     <label className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-2 block">
+                        Date of Birth <span className="text-destructive">*</span>
                       </label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -282,7 +337,7 @@ const RegisterPage = () => {
                       <div className={`flex-1 h-1 rounded-full ${/[^A-Za-z0-9]/.test(password) ? "bg-primary" : "bg-border"}`} />
                     </div>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      8+ characters · Uppercase · Number · Special char (optional)
+                      8+ characters · Uppercase · Lowercase · Number · Special char (required)
                     </p>
                   </div>
 
@@ -433,7 +488,7 @@ const RegisterPage = () => {
                         <CheckCircle2 className="h-10 w-10 text-primary" />
                       </div>
                       <p className="font-mono text-sm text-foreground tracking-wider">REGISTRATION COMPLETE</p>
-                      <p className="text-xs text-muted-foreground">Redirecting to login...</p>
+                      <p className="text-xs text-muted-foreground">Redirecting to dashboard...</p>
                     </motion.div>
                   )}
 
