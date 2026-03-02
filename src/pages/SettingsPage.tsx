@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, LogOut, Shield, Bell, HelpCircle, FileText, Trash2,
-  Globe, Lock, Fingerprint, Info, ChevronRight, ToggleLeft, ToggleRight,
+  Globe, Lock, Info, ChevronRight, ToggleLeft, ToggleRight,
   Download, History, Eye, EyeOff,
 } from "lucide-react";
 import { useAnalysis } from "@/context/AnalysisContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const SettingsPage = () => {
@@ -26,19 +27,11 @@ const SettingsPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [bioMethod, setBioMethod] = useState("");
   const [language, setLanguage] = useState("English (US)");
 
   useEffect(() => {
-    // Load preferences
     setNotifications(localStorage.getItem("nvx_notifications") !== "false");
     setDataSharing(localStorage.getItem("nvx_data_sharing") === "true");
-
-    const currentUser = localStorage.getItem("nvx_current_user");
-    if (currentUser) {
-      const methods = JSON.parse(localStorage.getItem("nvx_bio_methods") || "{}");
-      setBioMethod(methods[currentUser] || "Not enrolled");
-    }
   }, []);
 
   const handleLogout = () => {
@@ -52,23 +45,21 @@ const SettingsPage = () => {
     const next = !notifications;
     setNotifications(next);
     localStorage.setItem("nvx_notifications", String(next));
+    toast({ title: next ? "Notifications enabled" : "Notifications disabled" });
   };
 
   const toggleDataSharing = () => {
     const next = !dataSharing;
     setDataSharing(next);
     localStorage.setItem("nvx_data_sharing", String(next));
+    toast({ title: next ? "Data sharing enabled" : "Data sharing disabled" });
   };
 
   const handleExportData = () => {
     const currentUser = localStorage.getItem("nvx_current_user");
     const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
     const history = JSON.parse(localStorage.getItem("nvx_test_history") || "[]");
-    const data = {
-      user: users[currentUser || ""] || {},
-      testHistory: history,
-      exportedAt: new Date().toISOString(),
-    };
+    const data = { user: users[currentUser || ""] || {}, testHistory: history, exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -88,8 +79,9 @@ const SettingsPage = () => {
   const handleChangePassword = () => {
     const currentUser = localStorage.getItem("nvx_current_user");
     if (!currentUser) return;
-    const creds = JSON.parse(localStorage.getItem("nvx_credentials") || "{}");
-    if (creds[currentUser] !== oldPassword) {
+    const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
+    const user = users[currentUser];
+    if (!user || user.password !== oldPassword) {
       toast({ title: "Incorrect current password", variant: "destructive" });
       return;
     }
@@ -101,8 +93,9 @@ const SettingsPage = () => {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
     }
-    creds[currentUser] = newPassword;
-    localStorage.setItem("nvx_credentials", JSON.stringify(creds));
+    user.password = newPassword;
+    users[currentUser] = user;
+    localStorage.setItem("nvx_users", JSON.stringify(users));
     setShowChangePassword(false);
     setOldPassword(""); setNewPassword(""); setConfirmPassword("");
     toast({ title: "Password changed successfully" });
@@ -114,7 +107,7 @@ const SettingsPage = () => {
     const users = JSON.parse(localStorage.getItem("nvx_users") || "{}");
     delete users[currentUser];
     localStorage.setItem("nvx_users", JSON.stringify(users));
-    ["nvx_credentials", "nvx_face_profiles", "nvx_bio_methods", "nvx_avatars"].forEach((key) => {
+    ["nvx_avatars"].forEach((key) => {
       const data = JSON.parse(localStorage.getItem(key) || "{}");
       delete data[currentUser];
       localStorage.setItem(key, JSON.stringify(data));
@@ -130,83 +123,44 @@ const SettingsPage = () => {
     {
       title: "General",
       items: [
-        {
-          icon: Bell, label: "Notifications", description: "Receive alerts for analysis results and health updates",
-          action: <button onClick={toggleNotifications} className="text-primary">{notifications ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6 text-muted-foreground" />}</button>,
-        },
-        {
-          icon: Globe, label: "Language", description: language,
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-        },
+        { icon: Bell, label: "Notifications", description: "Receive alerts for analysis results and health updates", action: <button onClick={toggleNotifications} className="text-primary">{notifications ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6 text-muted-foreground" />}</button> },
+        { icon: Globe, label: "Language", description: language, action: <ChevronRight className="h-4 w-4 text-muted-foreground" /> },
       ],
     },
     {
       title: "Privacy & Security",
       items: [
-        {
-          icon: Shield, label: "Data Privacy", description: "Manage how your health data is stored and processed",
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-        },
-        {
-          icon: Lock, label: "Change Password", description: "Update your account password",
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => setShowChangePassword(true),
-        },
-        {
-          icon: Fingerprint, label: "Biometric Settings",
-          description: `Current method: ${bioMethod === "fingerprint" ? "Fingerprint" : bioMethod === "face" ? "Face Scan" : "Not enrolled"}`,
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-        },
-        {
-          icon: ToggleLeft, label: "Data Sharing", description: "Share anonymized data for research improvements",
-          action: <button onClick={toggleDataSharing} className="text-primary">{dataSharing ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6 text-muted-foreground" />}</button>,
-        },
+        { icon: Shield, label: "Data Privacy", description: "Manage how your health data is stored and processed", action: <ChevronRight className="h-4 w-4 text-muted-foreground" /> },
+        { icon: Lock, label: "Change Password", description: "Update your account password", action: <ChevronRight className="h-4 w-4 text-muted-foreground" />, onClick: () => setShowChangePassword(true) },
+        { icon: ToggleLeft, label: "Data Sharing", description: "Share anonymized data for research", action: <button onClick={toggleDataSharing} className="text-primary">{dataSharing ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6 text-muted-foreground" />}</button> },
       ],
     },
     {
       title: "Data Management",
       items: [
-        {
-          icon: Download, label: "Export Data", description: "Download all your health analysis data as a JSON file",
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-          onClick: handleExportData,
-        },
-        {
-          icon: Trash2, label: "Clear History", description: "Remove all past test records and analysis data",
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => setShowClearHistory(true),
-        },
+        { icon: Download, label: "Export Data", description: "Download all health data as JSON", action: <ChevronRight className="h-4 w-4 text-muted-foreground" />, onClick: handleExportData },
+        { icon: Trash2, label: "Clear History", description: "Remove all past test records", action: <ChevronRight className="h-4 w-4 text-muted-foreground" />, onClick: () => setShowClearHistory(true) },
       ],
     },
     {
       title: "Support",
       items: [
-        {
-          icon: HelpCircle, label: "Help & FAQ", description: "Common questions and troubleshooting guides",
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => navigate("/help"),
-        },
-        {
-          icon: Info, label: "About Neuro-Vitals", description: "Version 1.0.0 — AI-powered biometric health platform",
-          action: <ChevronRight className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => navigate("/about"),
-        },
+        { icon: HelpCircle, label: "Help & FAQ", description: "Common questions and troubleshooting", action: <ChevronRight className="h-4 w-4 text-muted-foreground" />, onClick: () => navigate("/help") },
+        { icon: Info, label: "About Neuro-Vitals", description: "Version 1.0.0 — AI-powered health platform", action: <ChevronRight className="h-4 w-4 text-muted-foreground" />, onClick: () => navigate("/about") },
       ],
     },
   ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border/50 px-6 py-4 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <button onClick={() => navigate("/account")} className="p-2 rounded-lg hover:bg-accent transition-colors">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <h1 className="text-lg font-bold tracking-tight text-foreground">Settings</h1>
-        </div>
-      </header>
+      <Header />
 
-      <main className="max-w-5xl mx-auto px-6 py-10 flex-1 w-full">
+      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h2 className="text-3xl font-bold text-foreground">Settings</h2>
+          <p className="text-sm text-muted-foreground mt-1">Manage your account preferences and privacy settings</p>
+        </motion.div>
+
         {sections.map((section, sIdx) => (
           <motion.div key={section.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: sIdx * 0.1 }} className="mb-8">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{section.title}</h3>
@@ -258,7 +212,7 @@ const SettingsPage = () => {
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="w-full max-w-sm rounded-2xl border border-border/50 bg-card p-6 shadow-xl text-center">
               <History className="h-10 w-10 text-warning mx-auto mb-3" />
               <h3 className="text-lg font-bold text-foreground mb-2">Clear All History?</h3>
-              <p className="text-sm text-muted-foreground mb-6">This will permanently remove all your past test records. This action cannot be undone.</p>
+              <p className="text-sm text-muted-foreground mb-6">This will permanently remove all past test records.</p>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setShowClearHistory(false)} className="flex-1">Cancel</Button>
                 <Button variant="destructive" onClick={handleClearHistory} className="flex-1">Clear History</Button>
@@ -275,7 +229,7 @@ const SettingsPage = () => {
               <LogOut className="h-5 w-5 text-destructive" />
               <div className="text-left">
                 <p className="text-sm font-semibold text-destructive">Log Out</p>
-                <p className="text-xs text-muted-foreground">Sign out of your account on this device</p>
+                <p className="text-xs text-muted-foreground">Sign out of your account</p>
               </div>
             </button>
             {!showDeleteConfirm ? (
@@ -288,7 +242,7 @@ const SettingsPage = () => {
               </button>
             ) : (
               <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="p-5 rounded-xl border border-destructive/50 bg-destructive/10">
-                <p className="text-sm text-destructive font-medium mb-4">Are you sure? This action cannot be undone. All data will be permanently deleted.</p>
+                <p className="text-sm text-destructive font-medium mb-4">Are you sure? This cannot be undone.</p>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">Cancel</Button>
                   <Button variant="destructive" onClick={handleDeleteAccount} className="flex-1">Delete Forever</Button>

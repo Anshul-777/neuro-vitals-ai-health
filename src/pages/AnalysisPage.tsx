@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Scan, Activity, Mic, Box, AlertTriangle, Camera, MicIcon,
-  Shield, CheckCircle, XCircle, ChevronRight,
+  Shield, CheckCircle, XCircle, ChevronRight, Volume2,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -19,20 +19,20 @@ const preTestInstructions: Record<string, { title: string; tips: string[] }> = {
   face_scan: {
     title: "Face Scan Preparation",
     tips: [
-      "Ensure your face is well-lit with even, bright lighting — avoid backlighting or shadows",
-      "Position your face in the center of the frame, approximately 40–60 cm from the camera",
-      "Maintain a neutral, relaxed facial expression throughout the scan",
+      "Ensure your face is well-lit with even, bright lighting — avoid backlighting",
+      "Position your face in the center of the frame, 40–60 cm from camera",
+      "Maintain a neutral, relaxed facial expression throughout",
       "Remove glasses or accessories that may obstruct your face",
-      "Sit still and do not speak or move during the recording",
+      "Sit still and do not speak during the recording",
     ],
   },
   body_scan: {
     title: "Body Scan Preparation",
     tips: [
-      "Stand up and step back 2–3 meters from the camera so your full body is visible",
-      "Ensure adequate lighting in the room — your full silhouette should be clearly visible",
-      "Wear fitted clothing for better skeletal tracking accuracy",
-      "Clear the walking path of obstacles before starting",
+      "Stand up and step back 2–3 meters from the camera",
+      "Ensure your full body is visible in frame",
+      "Wear fitted clothing for better skeletal tracking",
+      "Clear the walking path of obstacles",
       "Walk naturally at your normal pace when the scan begins",
     ],
   },
@@ -41,9 +41,9 @@ const preTestInstructions: Record<string, { title: string; tips: string[] }> = {
     tips: [
       "Move to a quiet room with minimal background noise",
       "Position yourself 30–50 cm from the microphone",
-      "Have a glass of water nearby — avoid speaking before the test if possible",
-      "You will be asked to speak a sentence and sustain a vowel sound",
-      "Speak clearly and at your natural volume",
+      "Have a glass of water nearby — clear your throat beforehand",
+      "You will speak a sentence and sustain a vowel sound",
+      "Speak clearly at your natural volume",
     ],
   },
   "3d_face": {
@@ -51,9 +51,9 @@ const preTestInstructions: Record<string, { title: string; tips: string[] }> = {
     tips: [
       "Ensure even lighting on your face from multiple directions",
       "Look directly at the camera to begin",
-      "You will be prompted to slowly turn your head left, center, then right",
-      "Maintain a neutral expression throughout all orientations",
-      "Move slowly and smoothly — avoid jerky head movements",
+      "Slowly turn your head left, center, then right when prompted",
+      "Maintain a neutral expression throughout",
+      "Move slowly and smoothly — avoid jerky movements",
     ],
   },
 };
@@ -74,8 +74,10 @@ const AnalysisPage = () => {
 
   const modules = modulesRef.current;
   const current = modules[moduleIndex];
+  const isVoiceOnly = selectedModules.length === 1 && selectedModules[0] === "voice_scan";
   const needsCamera = selectedModules.some((m) => ["face_scan", "body_scan", "3d_face"].includes(m));
   const needsMic = selectedModules.includes("voice_scan");
+  const currentIsVoice = current?.id === "voice_scan";
 
   useEffect(() => {
     if (selectedModules.length === 0) navigate("/test-selection");
@@ -88,7 +90,7 @@ const AnalysisPage = () => {
         audio: needsMic,
       });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      if (videoRef.current && needsCamera) videoRef.current.srcObject = stream;
       setPermissionStatus("granted");
       setPhase("scanning");
     } catch {
@@ -96,7 +98,6 @@ const AnalysisPage = () => {
     }
   };
 
-  // Module progress timer
   useEffect(() => {
     if (phase !== "scanning" || !current) return;
     setProgress(0);
@@ -120,7 +121,6 @@ const AnalysisPage = () => {
         setTimeout(() => {
           const results = generateResults(selectedModules);
           setResults(results);
-          // Save to history
           const history = JSON.parse(localStorage.getItem("nvx_test_history") || "[]");
           history.unshift({
             id: Date.now().toString(),
@@ -145,16 +145,12 @@ const AnalysisPage = () => {
 
   const Icon = current ? iconMap[current.id] || Scan : Scan;
 
-  // Pre-test Notice Screen
+  // Pre-test Notice
   if (phase === "notice") {
     const isFullAnalysis = selectedModules.length === 4;
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-lg rounded-2xl border border-border/50 bg-card p-8 shadow-xl"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg rounded-2xl border border-border/50 bg-card p-8 shadow-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
               <Shield className="h-6 w-6 text-primary" />
@@ -170,7 +166,7 @@ const AnalysisPage = () => {
           {isFullAnalysis ? (
             <div className="space-y-4 mb-8">
               <p className="text-sm text-muted-foreground leading-relaxed">
-                This comprehensive analysis will run all 4 modules sequentially: Face Scan, Body Scan, Voice Scan, and 3D Face Scan. The entire process takes approximately {modules.reduce((s, m) => s + m.duration, 0)} seconds.
+                This comprehensive analysis will run all 4 modules sequentially. Total time: ~{modules.reduce((s, m) => s + m.duration, 0)} seconds.
               </p>
               <div className="space-y-2">
                 {modules.map((m) => {
@@ -187,19 +183,13 @@ const AnalysisPage = () => {
                 })}
               </div>
               <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
-                <p className="text-xs text-warning">Ensure bright lighting, a quiet room, and enough space to walk. Do not close this window during the analysis.</p>
+                <p className="text-xs text-warning">Ensure bright lighting, a quiet room, and enough space to walk.</p>
               </div>
             </div>
           ) : (
             <div className="space-y-3 mb-8">
               {preTestInstructions[current?.id]?.tips.map((tip, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-muted/30"
-                >
+                <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                   <CheckCircle className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-muted-foreground">{tip}</p>
                 </motion.div>
@@ -215,22 +205,16 @@ const AnalysisPage = () => {
     );
   }
 
-  // Permission Request Screen
+  // Permission Request
   if (phase === "permission") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md rounded-2xl border border-border/50 bg-card p-8 shadow-xl text-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl border border-border/50 bg-card p-8 shadow-xl text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-6">
-            <Camera className="h-8 w-8 text-primary" />
+            {isVoiceOnly ? <MicIcon className="h-8 w-8 text-primary" /> : <Camera className="h-8 w-8 text-primary" />}
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">Permission Required</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Neuro-Vitals needs access to the following to perform the analysis:
-          </p>
+          <p className="text-sm text-muted-foreground mb-6">Neuro-Vitals needs access to perform the analysis:</p>
           <div className="space-y-3 mb-6">
             {needsCamera && (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 text-left">
@@ -252,17 +236,15 @@ const AnalysisPage = () => {
             )}
           </div>
 
-          {permissionStatus === "denied" ? (
+          {permissionStatus === "denied" && (
             <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <XCircle className="h-4 w-4 text-destructive" />
                 <p className="text-sm font-medium text-destructive">Permission Denied</p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Please enable camera/microphone permissions in your browser settings and try again.
-              </p>
+              <p className="text-xs text-muted-foreground">Please enable permissions in your browser settings.</p>
             </div>
-          ) : null}
+          )}
 
           <Button onClick={requestPermissions} className="w-full font-mono tracking-wider" size="lg">
             {permissionStatus === "denied" ? "TRY AGAIN" : "GRANT ACCESS & START"}
@@ -275,15 +257,86 @@ const AnalysisPage = () => {
     );
   }
 
+  // Voice-only scanning UI
+  if (currentIsVoice && !needsCamera) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="border-b border-border/50 px-6 py-3 flex-shrink-0">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-sm font-bold tracking-tight text-foreground">NEURO<span className="text-primary">—</span>VITALS</h1>
+              <div className="h-4 w-px bg-border" />
+              <span className="text-xs font-mono text-destructive animate-pulse">● REC</span>
+            </div>
+            <span className="text-xs font-mono text-muted-foreground">Voice Analysis</span>
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center p-6">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md text-center">
+            {/* Voice visualization */}
+            <div className="relative w-48 h-48 mx-auto mb-8">
+              <div className="absolute inset-0 rounded-full bg-primary/5 border-2 border-primary/20" />
+              <motion.div
+                className="absolute inset-4 rounded-full bg-primary/10 border border-primary/30"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute inset-8 rounded-full bg-primary/15 border border-primary/40"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: 0.3 }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Volume2 className="h-12 w-12 text-primary" />
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold text-foreground mb-2">{current.name}</h3>
+            <p className="text-sm text-muted-foreground mb-6">{current.subtitle}</p>
+
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Progress</span>
+                <span className="text-xs font-mono text-primary">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+
+            <div className="space-y-2">
+              {current.instructions.map((instr, i) => (
+                <div key={i} className={`p-3 rounded-lg text-sm transition-all duration-300 ${i === instructionIndex ? "bg-primary/10 text-foreground border border-primary/20" : i < instructionIndex ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
+                  <span className="font-mono text-[10px] text-primary/60 mr-2">{i + 1}.</span>{instr}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border/30">
+              <div className="flex items-center justify-center gap-2 text-[10px] text-warning/70 font-mono">
+                <AlertTriangle className="h-3 w-3" />
+                <span>Do not close this window during analysis</span>
+              </div>
+            </div>
+          </motion.div>
+        </main>
+
+        {phase === "processing" && (
+          <div className="fixed inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-50">
+            <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-primary font-mono text-sm tracking-wider">PROCESSING DATA...</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Camera-based scanning UI
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/50 px-6 py-3 flex-shrink-0">
+      <header className="border-b border-border/50 px-6 py-3 flex-shrink-0 bg-card/80 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-bold tracking-tight text-foreground">
-              NEURO<span className="text-primary">—</span>VITALS
-            </h1>
+            <h1 className="text-sm font-bold tracking-tight text-foreground">NEURO<span className="text-primary">—</span>VITALS</h1>
             <div className="h-4 w-px bg-border" />
             <span className="text-xs font-mono text-destructive animate-pulse">● REC</span>
           </div>
@@ -291,33 +344,44 @@ const AnalysisPage = () => {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col lg:flex-row">
         {/* Camera feed */}
-        <div className="flex-1 relative bg-background flex items-center justify-center min-h-[400px]">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+        <div className="flex-1 relative bg-muted/30 flex items-center justify-center min-h-[400px] p-4">
+          <div className="relative w-full max-w-2xl aspect-video rounded-2xl overflow-hidden border-2 border-primary/20 shadow-2xl bg-background">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
 
-          {/* Enhanced scan overlay */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent animate-scan-line" />
-            {/* Animated corner brackets */}
-            <div className="absolute top-6 left-6 w-16 h-16 border-l-2 border-t-2 border-primary/40 rounded-tl-lg" />
-            <div className="absolute top-6 right-6 w-16 h-16 border-r-2 border-t-2 border-primary/40 rounded-tr-lg" />
-            <div className="absolute bottom-6 left-6 w-16 h-16 border-l-2 border-b-2 border-primary/40 rounded-bl-lg" />
-            <div className="absolute bottom-6 right-6 w-16 h-16 border-r-2 border-b-2 border-primary/40 rounded-br-lg" />
-            {/* Gradient borders */}
-            <div className="absolute inset-0 rounded-lg" style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.1), transparent 30%, transparent 70%, hsl(var(--primary) / 0.1))" }} />
-          </div>
+            {/* Scan overlay */}
+            <div className="absolute inset-0 pointer-events-none">
+              <motion.div
+                className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                animate={{ top: ["0%", "100%", "0%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              {/* Corner brackets with glow */}
+              <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-primary/50 rounded-tl-lg" />
+              <div className="absolute top-4 right-4 w-12 h-12 border-r-2 border-t-2 border-primary/50 rounded-tr-lg" />
+              <div className="absolute bottom-4 left-4 w-12 h-12 border-l-2 border-b-2 border-primary/50 rounded-bl-lg" />
+              <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-primary/50 rounded-br-lg" />
+              {/* Vignette */}
+              <div className="absolute inset-0 rounded-2xl" style={{ boxShadow: "inset 0 0 60px rgba(0,0,0,0.3)" }} />
+            </div>
 
-          {/* Signal quality */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/80 backdrop-blur px-3 py-1.5 rounded-full text-xs font-mono">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span className="text-muted-foreground">Signal: Good</span>
+            {/* Signal badge */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-card/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-mono border border-border/30">
+              <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <span className="text-muted-foreground">Signal: Good</span>
+            </div>
+
+            {/* Module badge */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-card/90 backdrop-blur px-4 py-2 rounded-full text-xs font-mono border border-border/30">
+              <Icon className="h-4 w-4 text-primary" />
+              <span className="text-foreground font-medium">{current?.name}</span>
+            </div>
           </div>
 
           {/* Processing overlay */}
           {phase === "processing" && (
-            <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-10">
+            <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-10 rounded-2xl">
               <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               <p className="text-primary font-mono text-sm tracking-wider">PROCESSING DATA...</p>
               <p className="text-muted-foreground text-xs">Running risk stratification</p>
@@ -350,16 +414,7 @@ const AnalysisPage = () => {
               <h4 className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-3">Instructions</h4>
               <div className="space-y-2">
                 {current.instructions.map((instr, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-start gap-2 p-2.5 rounded-lg text-xs transition-all duration-300 ${
-                      i === instructionIndex
-                        ? "bg-primary/10 text-foreground border border-primary/20"
-                        : i < instructionIndex
-                        ? "text-muted-foreground/40"
-                        : "text-muted-foreground"
-                    }`}
-                  >
+                  <div key={i} className={`flex items-start gap-2 p-2.5 rounded-lg text-xs transition-all duration-300 ${i === instructionIndex ? "bg-primary/10 text-foreground border border-primary/20" : i < instructionIndex ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
                     <span className="font-mono text-[10px] text-primary/60 mt-0.5">{i + 1}.</span>
                     <span>{instr}</span>
                   </div>

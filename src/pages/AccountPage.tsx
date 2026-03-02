@@ -5,6 +5,7 @@ import {
   ArrowLeft, UserCircle, Mail, Phone, Calendar, Lock, Camera,
   Sun, Moon, Monitor, Activity, Settings,
 } from "lucide-react";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 type ThemeMode = "light" | "dark" | "system";
@@ -89,16 +90,9 @@ const AccountPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border/50 px-6 py-4 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <button onClick={() => navigate("/dashboard")} className="p-2 rounded-lg hover:bg-accent transition-colors">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <h1 className="text-lg font-bold tracking-tight text-foreground">Account</h1>
-        </div>
-      </header>
+      <Header />
 
-      <main className="max-w-5xl mx-auto px-6 py-10 flex-1 w-full">
+      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full">
         {/* Avatar Section */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col items-center mb-10">
           <div className="relative group">
@@ -114,64 +108,68 @@ const AccountPage = () => {
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </motion.div>
 
-        {/* Personal Information */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="mb-8">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Personal Information</h3>
-          <div className="rounded-xl border border-border/50 bg-card divide-y divide-border/50">
-            {infoItems.map(({ icon: Icon, label, value }, idx) => (
-              <motion.div key={label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 + idx * 0.05 }} className="flex items-center gap-4 px-6 py-5">
-                <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">{label}</p>
-                  <p className="text-sm font-medium text-foreground">{value}</p>
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Personal Information */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Personal Information</h3>
+            <div className="rounded-xl border border-border/50 bg-card divide-y divide-border/50">
+              {infoItems.map(({ icon: Icon, label, value }, idx) => (
+                <motion.div key={label} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 + idx * 0.05 }} className="flex items-center gap-4 px-6 py-5">
+                  <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="text-sm font-medium text-foreground">{value}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <div className="space-y-8">
+            {/* Theme */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Theme</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {themeOptions.map(({ mode, icon: Icon, label }) => (
+                  <button key={mode} onClick={() => applyTheme(mode)}
+                    className={`p-5 rounded-xl border text-center transition-all duration-200 ${theme === mode ? "border-primary bg-primary/10 text-primary" : "border-border/50 bg-card text-muted-foreground hover:border-border"}`}
+                  >
+                    <Icon className="h-6 w-6 mx-auto mb-2" />
+                    <p className="text-sm font-medium">{label}</p>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.3 }}>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Statistics</h3>
+              <div className="rounded-xl border border-border/50 bg-card p-6 flex items-center gap-5">
+                <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Activity className="h-7 w-7 text-primary" />
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+                <div>
+                  <p className="text-3xl font-bold text-foreground">{testCount}</p>
+                  <p className="text-sm text-muted-foreground">Total Tests Taken</p>
+                </div>
+              </div>
+            </motion.div>
 
-        {/* Theme */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="mb-8">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Theme</h3>
-          <div className="grid grid-cols-3 gap-4">
-            {themeOptions.map(({ mode, icon: Icon, label }) => (
-              <button key={mode} onClick={() => applyTheme(mode)}
-                className={`p-5 rounded-xl border text-center transition-all duration-200 ${theme === mode ? "border-primary bg-primary/10 text-primary" : "border-border/50 bg-card text-muted-foreground hover:border-border"}`}
-              >
-                <Icon className="h-6 w-6 mx-auto mb-2" />
-                <p className="text-sm font-medium">{label}</p>
+            {/* Settings Link */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.4 }}>
+              <button onClick={() => navigate("/settings")} className="w-full p-6 rounded-xl border border-border/50 bg-card hover:border-primary/20 transition-all flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+                  <Settings className="h-6 w-6 text-accent-foreground" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-base font-semibold text-foreground">Settings</p>
+                  <p className="text-sm text-muted-foreground">Privacy, notifications, data management & more</p>
+                </div>
+                <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />
               </button>
-            ))}
+            </motion.div>
           </div>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="mb-8">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Statistics</h3>
-          <div className="rounded-xl border border-border/50 bg-card p-6 flex items-center gap-5">
-            <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Activity className="h-7 w-7 text-primary" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-foreground">{testCount}</p>
-              <p className="text-sm text-muted-foreground">Total Tests Taken</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Settings Link */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.4 }}>
-          <button onClick={() => navigate("/settings")} className="w-full p-6 rounded-xl border border-border/50 bg-card hover:border-primary/20 transition-all flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-              <Settings className="h-6 w-6 text-accent-foreground" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-base font-semibold text-foreground">Settings</p>
-              <p className="text-sm text-muted-foreground">Privacy, notifications, data management & more</p>
-            </div>
-            <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />
-          </button>
-        </motion.div>
+        </div>
       </main>
 
       <Footer />
