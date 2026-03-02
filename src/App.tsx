@@ -15,6 +15,7 @@ import IntakeFormPage from "./pages/IntakeFormPage";
 import TestSelectionPage from "./pages/TestSelectionPage";
 import AnalysisPage from "./pages/AnalysisPage";
 import ResultsPage from "./pages/ResultsPage";
+import HistoryPage from "./pages/HistoryPage";
 import AboutPage from "./pages/AboutPage";
 import HelpContactPage from "./pages/HelpContactPage";
 import NotFound from "./pages/NotFound";
@@ -22,7 +23,7 @@ import Chatbot from "./components/Chatbot";
 
 const queryClient = new QueryClient();
 
-const authenticatedRoutes = ["/dashboard", "/account", "/settings", "/intake", "/test-selection", "/analysis", "/results", "/about", "/help"];
+const authenticatedRoutes = ["/dashboard", "/account", "/settings", "/intake", "/test-selection", "/analysis", "/results", "/history", "/about", "/help"];
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -49,6 +50,7 @@ function AnimatedRoutes() {
             <Route path="/test-selection" element={<TestSelectionPage />} />
             <Route path="/analysis" element={<AnalysisPage />} />
             <Route path="/results" element={<ResultsPage />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/help" element={<HelpContactPage />} />
             <Route path="*" element={<NotFound />} />
