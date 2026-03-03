@@ -1,15 +1,15 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import { UserProfile, AnalysisResults } from "@/lib/types";
+import { UserProfile, BackendResults } from "@/lib/types";
 
 interface AnalysisState {
   profile: UserProfile | null;
   selectedModules: string[];
-  results: AnalysisResults | null;
-  identityStatus: "matched" | "new" | null;
+  results: BackendResults | null;
+  sessionId: string;
   setProfile: (p: UserProfile) => void;
   setSelectedModules: (m: string[]) => void;
-  setResults: (r: AnalysisResults) => void;
-  setIdentityStatus: (s: "matched" | "new" | null) => void;
+  setResults: (r: BackendResults) => void;
+  setSessionId: (s: string) => void;
   reset: () => void;
 }
 
@@ -18,32 +18,18 @@ const Ctx = createContext<AnalysisState | null>(null);
 export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
-  const [results, setResults] = useState<AnalysisResults | null>(null);
-  const [identityStatus, setIdentityStatus] = useState<
-    "matched" | "new" | null
-  >(null);
+  const [results, setResults] = useState<BackendResults | null>(null);
+  const [sessionId, setSessionId] = useState<string>("");
 
   const reset = () => {
     setProfile(null);
     setSelectedModules([]);
     setResults(null);
-    setIdentityStatus(null);
+    setSessionId("");
   };
 
   return (
-    <Ctx.Provider
-      value={{
-        profile,
-        selectedModules,
-        results,
-        identityStatus,
-        setProfile,
-        setSelectedModules,
-        setResults,
-        setIdentityStatus,
-        reset,
-      }}
-    >
+    <Ctx.Provider value={{ profile, selectedModules, results, sessionId, setProfile, setSelectedModules, setResults, setSessionId, reset }}>
       {children}
     </Ctx.Provider>
   );
