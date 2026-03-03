@@ -1,6 +1,6 @@
 # Neuro-Vitals v2 — Render-compatible requirements
 # Key: opencv-python-headless avoids libGL dependency
-# mediapipe 0.10.x bundles its own native libs
+# mediapipe bundles its own native libs
 
 fastapi
 uvicorn[standard]
